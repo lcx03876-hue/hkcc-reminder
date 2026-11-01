@@ -1,0 +1,56 @@
+﻿HKCC / 校园日程提醒 - 一键安装包
+================================
+
+【怎么装】
+
+1. 把整个文件夹解压到一个固定位置，例如：
+     C:\hkcc-reminder
+     D:\Tools\hkcc-reminder
+   不要放在 C:\Program Files；安装后也不要移动或删除这个文件夹
+   （计划任务指向这里）。
+
+2. 双击 install.bat。Windows 弹出 UAC 时选“是”。
+
+3. 按窗口提示填写：
+   - 发件邮箱
+   - SMTP 服务器 / 端口（一般直接回车用自动推荐）
+   - 收件邮箱（默认同发件邮箱）
+   - Blackboard 日历源 URL（建议填写；留空则只用本地 data\blackboard.ics）
+   - SMTP 密码 / 授权码（在弹出的 Windows 凭据窗口输入）
+   - 每天提醒时间（默认 08:00）
+
+4. 安装器会发一封测试邮件，并注册计划任务 "HKCC Daily Reminder"。
+
+5. 完成后编辑：
+     data\timetable.ics     你的课表
+     config\courses.psd1    你的课程代号
+   格式说明见 README.md。
+
+【运行前提】
+
+- Windows 10/11 + Windows PowerShell 5.1
+- 到提醒时间时，电脑必须开机、联网，并且当前 Windows 用户已登录
+- 默认不会唤醒睡眠中的电脑；关机 / 睡眠 / 注销期间不发送，
+  开机或唤醒后补跑，但会晚于设定时间
+- 注册计划任务需要管理员权限
+
+【卸载】
+
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-task.ps1 -Uninstall
+
+然后删除整个文件夹。
+
+【隐私】
+
+- 邮箱密码 / 授权码用 Windows DPAPI 加密，只有本机、当前 Windows 账户能解密
+- 配置、课表、日志都只在本机；安装包不含任何个人信息
+- 代码不依赖第三方模块，不调用任何在线模型
+
+【出问题】
+
+- 测试邮件失败：检查 SMTP 端口，确认用的是“授权码 / 应用专用密码”，
+  不是网页登录密码
+- 没收到邮件：看 logs\reminder-YYYY-MM.log，或先手动预览：
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\daily-reminder.ps1 -Preview
+- 计划任务没跑：确认到点时电脑开机、已登录；
+  在“任务计划程序”里查看 "HKCC Daily Reminder" 的最近运行结果

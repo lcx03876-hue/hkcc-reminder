@@ -1,0 +1,39 @@
+# ============================================================
+# Personal configuration and credentials -- NEVER commit these
+# ============================================================
+# Real config holds your email address and your Blackboard feed URL
+# (the feed URL works like a password: anyone with it can read your
+# course calendar).
+config/config.psd1
+config/smtp.cred.xml
+config/graph.cred.xml
+
+# Personal timetable / course mapping / one-off overrides
+config/courses.psd1
+config/uid-map.psd1
+config/extra-deadlines.psd1
+config/overrides.psd1
+
+# ============================================================
+# Personal calendar data and generated output
+# ============================================================
+data/*.ics
+!data/timetable.sample.ics
+data/*.json
+out/
+logs/
+acl-recovery/
+
+# ============================================================
+# OS / editor junk
+# ============================================================
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+
+# ============================================================
+# Release artifacts (built by scripts/build-release.ps1)
+# ============================================================
+dist/
+

@@ -1,0 +1,7 @@
+# Files that are useful in the git repo but should not ship in the release zip.
+/scripts/build-release.ps1 export-ignore
+/dist/ export-ignore
+
+# Windows-friendly line endings for files double-clicked by end users.
+*.bat text eol=crlf
+INSTALL.txt text eol=crlf
