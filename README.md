@@ -48,7 +48,7 @@
 
 ### 每日邮件（手机端）
 
-![手机端邮件预览](docs/screenshots/email-preview.png)
+<img src="docs/screenshots/email-preview.png" alt="手机端邮件实际画面" width="360">
 
 ### 本地面板
 
