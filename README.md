@@ -46,9 +46,9 @@
 
 ## 界面预览
 
-### 每日邮件
+### 每日邮件（手机端）
 
-![每日邮件预览](docs/screenshots/email-preview.png)
+![手机端邮件预览](docs/screenshots/email-preview.png)
 
 ### 本地面板
 
