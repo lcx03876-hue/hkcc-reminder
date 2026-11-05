@@ -103,10 +103,19 @@ $T = $null
 
     # ---------- 1. 同步数据源 ----------
     Write-Log '开始同步 Blackboard 日历源…'
-    $syncScript = Join-Path $SelfDir 'sync-feed.ps1'
-    if (Test-Path -LiteralPath $syncScript) {
+    # sync-feed.ps1 在 lib\（不是 scripts\）。历史上这里写的是 $SelfDir，
+    # 导致 Test-Path 落空 → 整段被静默跳过 → 日历源一个多月没更新（2026-11-05 修复）。
+    # 两个位置都试，避免以后再挪目录时又静默失效。
+    $syncScript = $null
+    foreach ($cand in @((Join-Path $ProjectRoot 'lib\sync-feed.ps1'),
+                        (Join-Path $SelfDir    'sync-feed.ps1'))) {
+        if (Test-Path -LiteralPath $cand) { $syncScript = $cand; break }
+    }
+    if ($syncScript) {
         $syncOut = & $syncScript 2>&1
         foreach ($l in $syncOut) { Write-Log ('  ' + $l) }
+    } else {
+        Write-Log '  [ERROR] 找不到 sync-feed.ps1（lib\ 与 scripts\ 都没有），本次未同步源'
     }
 
     # ---------- 1a. 监测日历源变动（调课/补课/停课/换教室）----------
