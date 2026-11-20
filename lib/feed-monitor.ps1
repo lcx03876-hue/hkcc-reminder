@@ -99,6 +99,43 @@ function Compare-IcsFingerprints {
     return $changes
 }
 
+function Get-FeedChangeDate {
+    <#
+        取一条变动"涉及的那一天"：
+          新增/修改 -> New.Start；移除 -> Old.Start。
+        解析不出来返回 $null（调用方按"保留"处理，宁可多报）。
+    #>
+    param($Change)
+    $raw = $null
+    if ($Change.Kind -eq 'Removed') { $raw = $Change.Old.Start } else { $raw = $Change.New.Start }
+    if ([string]::IsNullOrEmpty($raw)) { return $null }
+    if ($raw -match '(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?') {
+        try {
+            $h  = if ($Matches[4]) { [int]$Matches[4] } else { 0 }
+            $mi = if ($Matches[5]) { [int]$Matches[5] } else { 0 }
+            return New-Object datetime ([int]$Matches[1]), ([int]$Matches[2]), ([int]$Matches[3]), $h, $mi, 0
+        } catch { return $null }
+    }
+    return $null
+}
+
+function Select-ActualFeedChanges {
+    <#
+        只保留"还没过时"的变动：涉及日期 >= 今天（本地时间）。
+        往年（如 2025/26 上学期的残留）和已经过去的调课/移除都属于历史噪声，
+        用户 2026-11-10 明确要求不再提示。
+    #>
+    param($Changes, [datetime]$Today)
+    $keep = @(); $skip = @()
+    foreach ($c in @($Changes)) {
+        if ($null -eq $c) { continue }
+        $d = Get-FeedChangeDate -Change $c
+        if ($null -eq $d) { $keep += $c; continue }
+        if ($d.Date -lt $Today.Date) { $skip += $c } else { $keep += $c }
+    }
+    return [pscustomobject]@{ Keep = @($keep); Skip = @($skip) }
+}
+
 function Get-IcsRawValueText {
     <# 把 'TZID=Asia/Hong_Kong:20250101T083000' 变成可读 '2025-01-01 08:30' #>
     param([string]$Raw)

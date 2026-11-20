@@ -127,10 +127,20 @@ $T = $null
         $bbIcs   = Join-Path $ProjectRoot 'data\blackboard.ics'
         $statePath = Join-Path $ProjectRoot 'data\feed-state.json'
         try {
-            $feedChanges = Update-FeedState -IcsPath $bbIcs -StatePath $statePath
+            $feedChanges = @(Update-FeedState -IcsPath $bbIcs -StatePath $statePath)
             Write-Log ('  日历源变动监测: ' + @($feedChanges).Count + ' 项')
             foreach ($ch in $feedChanges) {
                 Write-Log ('    [' + $ch.Kind + '] ' + $ch.Summary)
+            }
+            # 只保留今天及以后的变动。往年（2025/26 上学期残留）和已经过去的调课/移除
+            # 是历史噪声，用户 2026-11-10 明确要求以后不要再提示。
+            if ($feedChanges.Count -gt 0 -and (Get-Command Select-ActualFeedChanges -ErrorAction SilentlyContinue)) {
+                $sel = Select-ActualFeedChanges -Changes $feedChanges -Today ([datetime]::UtcNow.AddHours($HkOffset))
+                if (@($sel.Skip).Count -gt 0) {
+                    Write-Log ('  忽略已过期/往年变动: ' + @($sel.Skip).Count + ' 项')
+                    foreach ($ch in @($sel.Skip)) { Write-Log ('    [skip] ' + $ch.Summary) }
+                }
+                $feedChanges = @($sel.Keep)
             }
         } catch {
             Write-Log ('  [warn] 变动监测失败: ' + $_.Exception.Message)
@@ -201,7 +211,7 @@ $T = $null
             $label = if ($kindText.ContainsKey($ch.Kind)) { $kindText[$ch.Kind] } else { $ch.Kind }
             [void]$sbChg.AppendLine('')
             [void]$sbChg.AppendLine('  ● ' + $ch.Summary)
-            [void]$sbChg.AppendLine('    ' + $T.chgFields + $label)
+            [void]$sbChg.AppendLine('    [' + $label + ']')
             if ($ch.Kind -eq 'Changed') {
                 [void]$sbChg.AppendLine('    ' + $T.chgFields + ($ch.Fields -join '、'))
                 [void]$sbChg.AppendLine('    ' + $T.chgOld + (Get-IcsRawValueText $ch.Old.Start) + $(if ($ch.Old.Location) { '  @ ' + $ch.Old.Location } else { '' }))
@@ -337,8 +347,33 @@ $T = $null
     }
     # -UseSsl 是 switch 型参数：仅在需要时加入，避免传位置值报错
     if ([bool]$config['UseSsl']) { $mailParams['UseSsl'] = $true }
-    Send-MailMessage @mailParams
-    Write-Log ("邮件已发送 -> " + ($config['To'] -join ', ') + "  共 " + $rows.Count + " 项")
+
+    # 发信重试：Office365 偶尔直接掐断 SMTP 连接（2026-11-13 就整封漏发过），
+    # 隔一会儿再试通常就通了。
+    $maxTry = 3
+    $delays = @(60, 180)
+    $sent = $false
+    for ($i = 1; $i -le $maxTry; $i++) {
+        try {
+            Send-MailMessage @mailParams
+            $sent = $true
+            if ($i -gt 1) {
+                Write-Log ("邮件已发送（第 " + $i + " 次尝试成功） -> " + ($config['To'] -join ', ') + "  共 " + $rows.Count + " 项")
+            } else {
+                Write-Log ("邮件已发送 -> " + ($config['To'] -join ', ') + "  共 " + $rows.Count + " 项")
+            }
+            break
+        } catch {
+            $msg = $_.Exception.Message
+            if ($i -lt $maxTry) {
+                Write-Log ("发信失败（第 " + $i + " 次）：" + $msg + " ；" + $delays[$i - 1] + " 秒后重试")
+                Start-Sleep -Seconds $delays[$i - 1]
+            } else {
+                throw
+            }
+        }
+    }
+    if (-not $sent) { throw "发信未完成" }
     exit 0
 } catch {
     Write-Log ('ERROR: ' + $_.Exception.Message)
