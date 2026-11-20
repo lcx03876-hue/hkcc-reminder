@@ -164,6 +164,27 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\lib\build-merged.ps1
 `config\extra-deadlines.psd1`。不要手改 `data\blackboard.ics`，它每次同步
 都会被整体覆盖。
 
+### 读邮件（可选，不需要管理员同意）
+
+Office 365 的 Graph `Mail.Read` 通常要管理员批准，学生申请不到。想读邮件可以
+借 Thunderbird 的本地缓存：它在 IMAP + OAuth2 上只要**用户自己同意**，邮件会
+落盘成 mbox 文件，本项目的脚本直接解析这些文件，**不碰任何凭据**。
+
+一次性的手动准备：装 Thunderbird → 填学校邮箱 → 在弹出的 Microsoft 登录里
+同意 → 想读的文件夹右键账户「订阅」→ 再对该文件夹「属性 → 同步」勾上本地保留。
+
+之后随时可以看：
+
+```powershell
+# 最近 72 小时，每个文件夹列 5 封
+powershell -File .\scripts\mail-from-thunderbird.ps1 -Hours 72 -Max 5 -List
+
+# 只看某个科目文件夹
+powershell -File .\scripts\mail-from-thunderbird.ps1 -Folder SEHS2250 -Max 10
+```
+
+脚本是只读的：不写入、不改 Thunderbird 的任何设置。
+
 ## 4. 目录结构
 
 ```
