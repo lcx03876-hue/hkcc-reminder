@@ -15,7 +15,7 @@ function Get-V14Strings {
             footer2 = 'No fetch errors today.'
             thing = 'thing'; things = 'things'; classes = 'classes'; dueThisWeek = 'due this week.'; todayHas = 'today.'
             inDays = 'in {n} days'; inDay = 'in {n} day'; inHours = 'in {n}h'
-            changes = 'CHANGES'
+            changes = 'CHANGES'; urgent = 'URGENT'; dueToday = 'DUE TODAY'; dueTmrw = 'DUE TOMORROW'
         }
         'zh-CN' = @{
             dueSoon = '要交的东西'; todayTmrw = '今天和明天'; further = '更远的 · 7–14 天'
@@ -26,7 +26,7 @@ function Get-V14Strings {
             footer2 = '今天没有抓取失败。'
             thing = '件'; things = '件'; classes = '节课'; dueThisWeek = '要交。'; todayHas = '要上。'
             inDays = '{n} 天后'; inDay = '{n} 天后'; inHours = '{n} 小时后'
-            changes = '变动'
+            changes = '变动'; urgent = '加急'; dueToday = '今天截止'; dueTmrw = '明天截止'
         }
         'zh-TW' = @{
             dueSoon = '要交的東西'; todayTmrw = '今天和明天'; further = '更遠的 · 7–14 天'
@@ -37,7 +37,7 @@ function Get-V14Strings {
             footer2 = '今天沒有抓取失敗。'
             thing = '件'; things = '件'; classes = '節課'; dueThisWeek = '要交。'; todayHas = '要上。'
             inDays = '{n} 天後'; inDay = '{n} 天後'; inHours = '{n} 小時後'
-            changes = '變動'
+            changes = '變動'; urgent = '加急'; dueToday = '今天截止'; dueTmrw = '明天截止'
         }
     }
     if (-not $L.ContainsKey($Lang)) { return $L['en'] }
@@ -164,6 +164,13 @@ function Render-V14Html {
         $title = [System.Net.WebUtility]::HtmlEncode((Clean-V14Title $sp.Title))
 
         $add.Invoke('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' + $box + ';border-left:4px solid ' + $bar + ';margin-bottom:12px;">')
+        if ($urgent) {
+            $dLeft = [int]($d.Start.Date - $Now.Date).TotalDays
+            $head = $S.urgent
+            if ($dLeft -le 0) { $head = $head + ' · ' + $S.dueToday }
+            elseif ($dLeft -eq 1) { $head = $head + ' · ' + $S.dueTmrw }
+            $add.Invoke('<tr><td style="padding:14px 14px 0 12px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;"><div style="font-size:11px;letter-spacing:1.4px;color:#f08a8a;font-weight:700;">' + $head + '</div></td></tr>')
+        }
         $add.Invoke('<tr><td style="padding:14px 14px 14px 12px;' + $font + '">')
         $add.Invoke('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>')
         $add.Invoke('<td style="font-size:13px;font-weight:600;"><a href="#" style="color:#5aa9e6;text-decoration:underline;">' + $when + '</a></td>')
