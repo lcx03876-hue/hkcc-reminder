@@ -28,10 +28,46 @@ param(
     [int]$Max = 10,
     [int]$Hours = 0,
     [switch]$List,
-    [switch]$Body
+    [switch]$Body,
+    [switch]$Sync,            # Thunderbird 没开就先拉起来收一次信
+    [switch]$KeepThunderbird  # 用 -Sync 时，读完后不要关掉它
 )
 
 $ErrorActionPreference = 'Stop'
+# ---------- 按需同步：TB 没开就拉起来，读完再关 ----------
+$script:TbStartedByUs = $false
+function Start-MailSync {
+    $exe = $null
+    foreach ($c in @('C:\Program Files\Mozilla Thunderbird\thunderbird.exe',
+                     'C:\Program Files (x86)\Mozilla Thunderbird\thunderbird.exe')) {
+        if (Test-Path -LiteralPath $c) { $exe = $c; break }
+    }
+    if (-not $exe) { Write-Warning '没找到 Thunderbird，跳过同步'; return }
+    if (Get-Process thunderbird -ErrorAction SilentlyContinue) { return }
+    Write-Host 'Thunderbird 没开，先拉起来收信…' -ForegroundColor DarkGray
+    Start-Process -FilePath $exe -ArgumentList '-nosplash'
+    $script:TbStartedByUs = $true
+    Start-Sleep -Seconds 8
+}
+function Stop-MailSync {
+    if (-not $script:TbStartedByUs -or $KeepThunderbird) { return }
+    # 先好声好气地关（让它把索引写回去），关不掉再强杀
+    Get-Process thunderbird -ErrorAction SilentlyContinue | ForEach-Object {
+        try { $_.CloseMainWindow() | Out-Null } catch { }
+    }
+    for ($i = 0; $i -lt 20; $i++) {
+        Start-Sleep -Milliseconds 700
+        if (-not (Get-Process thunderbird -ErrorAction SilentlyContinue)) {
+            Write-Host 'Thunderbird 已关闭。' -ForegroundColor DarkGray
+            return
+        }
+    }
+    Get-Process thunderbird -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+    Write-Host 'Thunderbird 已强制关闭。' -ForegroundColor DarkGray
+}
+if ($Sync) { Start-MailSync }
+
 try {
     [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
     $OutputEncoding = New-Object System.Text.UTF8Encoding($false)
@@ -170,3 +206,5 @@ foreach ($imapRoot in $roots) {
 if ($total -eq 0) {
     Write-Host '没有匹配的邮件。检查：Thunderbird 是否登录、文件夹是否已订阅且本地保留。' -ForegroundColor Yellow
 }
+
+Stop-MailSync
