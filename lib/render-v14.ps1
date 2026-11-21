@@ -166,7 +166,7 @@ function Render-V14Html {
         $add.Invoke('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' + $box + ';border-left:4px solid ' + $bar + ';margin-bottom:12px;">')
         $add.Invoke('<tr><td style="padding:14px 14px 14px 12px;' + $font + '">')
         $add.Invoke('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>')
-        $add.Invoke('<td style="font-size:13px;color:' + $sub + ';font-weight:600;">' + $when + '</td>')
+        $add.Invoke('<td style="font-size:13px;font-weight:600;"><a href="#" style="color:#5aa9e6;text-decoration:underline;">' + $when + '</a></td>')
         $add.Invoke('<td align="right"><span style="display:inline-block;background:' + $tagBg + ';color:' + $tagFg + ';font-size:12px;font-weight:600;padding:3px 9px;border-radius:10px;">' + $cd + '</span></td>')
         $add.Invoke('</tr></table>')
         $add.Invoke('<div style="font-size:19px;line-height:1.4;color:#f6f1e8;font-weight:700;margin-top:6px;">' + $title + '</div>')
@@ -194,7 +194,7 @@ function Render-V14Html {
             $kind = if ($c.Kind) { ' ' + $c.Kind } else { '' }
             $place = if ($c.Location) { ' · ' + [System.Net.WebUtility]::HtmlEncode([string]$c.Location) } else { '' }
             $state = if ($c.Expired) { '<td align="right" style="padding:4px 0;color:#7c7c84;font-size:12px;">' + $S.ended + '</td>' } else { '<td></td>' }
-            $add.Invoke('<tr><td width="128" style="padding:4px 0;"><span style="display:inline-block;background:#1c2733;color:#a8c4dd;font-size:13px;font-weight:600;padding:3px 8px;border-radius:10px;">' + $c.Start.ToString('HH:mm') + '–' + $c.End.ToString('HH:mm') + '</span></td>')
+            $add.Invoke('<tr><td width="128" style="padding:4px 0;"><a href="#" style="display:inline-block;background:#16222e;color:#5aa9e6;font-size:13px;font-weight:600;padding:3px 8px;border-radius:10px;text-decoration:underline;">' + $c.Start.ToString('HH:mm') + '–' + $c.End.ToString('HH:mm') + '</a></td>')
             $add.Invoke('<td style="padding:4px 0;color:#d8d8dd;">' + [System.Net.WebUtility]::HtmlEncode([string]$sp.Title) + $kind + $place + '</td>' + $state + '</tr>')
         }
         $add.Invoke('</table>')
@@ -209,7 +209,7 @@ function Render-V14Html {
             $sp = Split-CoursePrefix -Summary $c.Summary
             $kind = if ($c.Kind) { ' ' + $c.Kind } else { '' }
             $place = if ($c.Location) { ' · ' + [System.Net.WebUtility]::HtmlEncode([string]$c.Location) } else { '' }
-            $add.Invoke('<tr><td width="128" style="padding:4px 0;"><span style="display:inline-block;background:#1c2733;color:#a8c4dd;font-size:13px;font-weight:600;padding:3px 8px;border-radius:10px;">' + $c.Start.ToString('HH:mm') + '–' + $c.End.ToString('HH:mm') + '</span></td>')
+            $add.Invoke('<tr><td width="128" style="padding:4px 0;"><a href="#" style="display:inline-block;background:#16222e;color:#5aa9e6;font-size:13px;font-weight:600;padding:3px 8px;border-radius:10px;text-decoration:underline;">' + $c.Start.ToString('HH:mm') + '–' + $c.End.ToString('HH:mm') + '</a></td>')
             $add.Invoke('<td style="padding:4px 0;color:#d8d8dd;">' + [System.Net.WebUtility]::HtmlEncode([string]$sp.Title) + $kind + $place + '</td><td></td></tr>')
         }
         $add.Invoke('</table>')
@@ -224,7 +224,7 @@ function Render-V14Html {
         foreach ($d in $p3) {
             $sp = Split-CoursePrefix -Summary $d.Summary
             $cd = Get-V14Countdown -Due $d.Start -Now $Now -S $S
-            $line = (Format-V14Day -Date $d.Start -Lang $Lang) + ' · <b>' + [System.Net.WebUtility]::HtmlEncode([string]$sp.Code) + '</b> ' + [System.Net.WebUtility]::HtmlEncode((Clean-V14Title $sp.Title)) + ' <span style="color:#7c7c84;">(' + $cd + ')</span>'
+            $line = '<a href="#" style="color:#5aa9e6;text-decoration:underline;">' + (Format-V14Day -Date $d.Start -Lang $Lang) + '</a> · <b>' + [System.Net.WebUtility]::HtmlEncode([string]$sp.Code) + '</b> ' + [System.Net.WebUtility]::HtmlEncode((Clean-V14Title $sp.Title)) + ' <span style="color:#7c7c84;">(' + $cd + ')</span>'
             $add.Invoke('<tr><td width="10" valign="top" style="padding-top:8px;"><span style="display:inline-block;width:6px;height:6px;border-radius:3px;background:#c9a06a;"></span></td>')
             $add.Invoke('<td style="color:#a9a9b1;">' + $line + '</td></tr>')
         }
