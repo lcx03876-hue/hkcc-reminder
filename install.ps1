@@ -58,6 +58,7 @@ $requiredFiles = @(
     'scripts\install-task.ps1',
     'scripts\daily-reminder.ps1',
     'lib\build-merged.ps1',
+    'lib\render-v14.ps1',
     'config\config.example.psd1'
 )
 foreach ($rel in $requiredFiles) {
