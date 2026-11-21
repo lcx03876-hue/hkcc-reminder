@@ -108,7 +108,7 @@ function Render-V14Html {
     $dueCount = $p0.Count + $p1.Count
     $classCount = $today.Count + $tmrw.Count
     $amber = '#e0a861'
-    $blue = '#a8c4dd'
+    $grey = '#9a958f'
     $font = 'font-family:-apple-system,BlinkMacSystemFont,sans-serif;'
     $gap = if ($Lang -eq 'en') { ' ' } else { '' }
 
@@ -132,7 +132,7 @@ function Render-V14Html {
     $dueWord = if ($dueCount -eq 1) { $S.thing } else { $S.things }
     $clsWord = $S.classes
     $add.Invoke('<span style="color:' + $amber + ';">' + $dueCount + $gap + $dueWord + '</span> ' + $S.dueThisWeek + '<br>')
-    $add.Invoke('<span style="color:' + $blue + ';">' + $classCount + $gap + $clsWord + '</span> ' + $S.todayHas)
+    $add.Invoke('<span style="color:' + $grey + ';">' + $classCount + $gap + $clsWord + '</span> ' + $S.todayHas)
     $add.Invoke('</div></td></tr>')
 
     # 变动
