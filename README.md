@@ -1,4 +1,4 @@
-﻿# hkcc-reminder
+# hkcc-reminder
 
 每天在你设定的时间，把「今天起 7 天」的课表、作业/考试截止、考试和调课告警
 整理成一封邮件；同时生成可导入 Outlook 的 `.ics`。纯 Windows PowerShell 5.1，
@@ -34,6 +34,7 @@
 - **科目标注**：用 UID 映射或标题规则补上课程代号
 - **调课覆盖**：公告里的调课 / 补课登记到 `overrides.psd1`，生成日历时应用
 - **三语邮件**：`zh-CN` / `zh-TW` / `en`
+- **邮件按需同步**：`mail-from-thunderbird.ps1 -Sync` 会在 Thunderbird 没开时自己拉起来收一次信，读完再关掉
 - **零第三方模块**：核心提醒器只用 PowerShell 5.1，不调用在线模型
 
 ## 可选面板（单独下载）
