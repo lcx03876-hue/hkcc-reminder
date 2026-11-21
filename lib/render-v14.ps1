@@ -127,7 +127,7 @@ function Render-V14Html {
 
     # 抬头
     $add.Invoke('<tr><td style="padding:26px 22px 2px 22px;' + $font + '">')
-    $add.Invoke('<div style="font-size:12px;color:#8b8b93;letter-spacing:1.5px;">' + (Format-V14Day -Date $Now -Lang $Lang) + '</div>')
+    $add.Invoke('<div style="font-size:12px;color:#8b8b93;letter-spacing:1.5px;">' + '<a href="#" style="color:#5aa9e6;text-decoration:underline;">' + (Format-V14Day -Date $Now -Lang $Lang) + '</a>' + '</div>')
     $add.Invoke('<div style="font-size:23px;line-height:1.4;color:#f4f1ec;font-weight:700;margin-top:8px;">')
     $dueWord = if ($dueCount -eq 1) { $S.thing } else { $S.things }
     $clsWord = $S.classes
@@ -183,7 +183,7 @@ function Render-V14Html {
     # TODAY & TOMORROW
     $add.Invoke('<tr><td style="padding:22px 22px 0 22px;' + $font + '">')
     $add.Invoke('<div style="font-size:12px;color:#8b8b93;letter-spacing:1.5px;font-weight:600;margin-bottom:10px;">' + $S.todayTmrw + '</div>')
-    $add.Invoke('<div style="font-size:13px;color:#b9b9c0;font-weight:600;margin-bottom:6px;">' + $S.today + ' · ' + (Format-V14Day -Date $Now -Lang $Lang) + '</div>')
+    $add.Invoke('<div style="font-size:13px;color:#b9b9c0;font-weight:600;margin-bottom:6px;">' + $S.today + ' · ' + '<a href="#" style="color:#5aa9e6;text-decoration:underline;">' + (Format-V14Day -Date $Now -Lang $Lang) + '</a>' + '</div>')
 
     if ($today.Count -eq 0) {
         $add.Invoke('<div style="font-size:13px;color:#8b8b93;">' + $S.noClasses + '</div>')
@@ -200,7 +200,7 @@ function Render-V14Html {
         $add.Invoke('</table>')
     }
 
-    $add.Invoke('<div style="font-size:13px;color:#b9b9c0;font-weight:600;margin:14px 0 4px 0;">' + $S.tomorrow + ' · ' + (Format-V14Day -Date $Now.AddDays(1) -Lang $Lang) + '</div>')
+    $add.Invoke('<div style="font-size:13px;color:#b9b9c0;font-weight:600;margin:14px 0 4px 0;">' + $S.tomorrow + ' · ' + '<a href="#" style="color:#5aa9e6;text-decoration:underline;">' + (Format-V14Day -Date $Now.AddDays(1) -Lang $Lang) + '</a>' + '</div>')
     if ($tmrw.Count -eq 0) {
         $add.Invoke('<div style="font-size:13px;color:#8b8b93;">' + $S.noClasses + '</div>')
     } else {
