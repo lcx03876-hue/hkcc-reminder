@@ -228,87 +228,14 @@ $T = $null
         $textBody = $sbChg.ToString() + $textBody
     }
 
-    $sb = New-Object System.Text.StringBuilder
-    [void]$sb.AppendLine('<html><head><meta charset="utf-8"></head><body style="font-family:Segoe UI,Microsoft YaHei,sans-serif;font-size:14px;color:#222">')
-    [void]$sb.AppendLine('<h2 style="margin:0 0 4px 0">' + (ConvertTo-HtmlSafe $title) + '</h2>')
-    [void]$sb.AppendLine('<div style="color:#666;font-size:12px">' + (Format-Mail $T.generated @{ t = $nowLocal.ToString('yyyy-MM-dd HH:mm') }) + '</div>')
-
-    # 变动提醒（最醒目，放在最前面）
-    if (@($feedChanges).Count -gt 0) {
-        $kindText = @{ 'Added' = $T.chgAdded; 'Changed' = $T.chgChanged; 'Removed' = $T.chgRemoved }
-        [void]$sb.AppendLine('<div style="margin:14px 0;padding:10px 12px;border-left:4px solid #d9534f;background:#fdf3f2">')
-        [void]$sb.AppendLine('<div style="font-weight:bold;color:#a02622;font-size:15px">' + $T.chgHead + '</div>')
-        foreach ($ch in @($feedChanges | Sort-Object Kind, Summary)) {
-            $label = if ($kindText.ContainsKey($ch.Kind)) { $kindText[$ch.Kind] } else { $ch.Kind }
-            [void]$sb.AppendLine('<div style="margin-top:8px">')
-            [void]$sb.AppendLine('<b>' + (ConvertTo-HtmlSafe $ch.Summary) + '</b> <span style="font-size:12px;color:#a02622">[' + $label + ']</span><br>')
-            if ($ch.Kind -eq 'Changed') {
-                [void]$sb.AppendLine('<span style="font-size:12px">' + $T.chgFields + ($ch.Fields -join '、') + '</span><br>')
-                [void]$sb.AppendLine('<span style="font-size:12px;color:#777">' + $T.chgOld + (Get-IcsRawValueText $ch.Old.Start) + $(if ($ch.Old.Location) { ' @ ' + (ConvertTo-HtmlSafe $ch.Old.Location) } else { '' }) + '</span><br>')
-                [void]$sb.AppendLine('<span style="font-size:12px;color:#0a7d28">' + $T.chgNew + (Get-IcsRawValueText $ch.New.Start) + $(if ($ch.New.Location) { ' @ ' + (ConvertTo-HtmlSafe $ch.New.Location) } else { '' }) + '</span>')
-            } elseif ($ch.Kind -eq 'Added') {
-                [void]$sb.AppendLine('<span style="font-size:12px;color:#0a7d28">' + $T.chgTime + (Get-IcsRawValueText $ch.New.Start) + $(if ($ch.New.Location) { ' @ ' + (ConvertTo-HtmlSafe $ch.New.Location) } else { '' }) + '</span>')
-            } elseif ($ch.Kind -eq 'Removed') {
-                [void]$sb.AppendLine('<span style="font-size:12px;color:#777">' + $T.chgWas + (Get-IcsRawValueText $ch.Old.Start) + $(if ($ch.Old.Location) { ' @ ' + (ConvertTo-HtmlSafe $ch.Old.Location) } else { '' }) + '</span>')
-            }
-            [void]$sb.AppendLine('</div>')
-        }
-        [void]$sb.AppendLine('<div style="margin-top:10px;font-size:12px;color:#666">' + $T.chgNote + '</div>')
-        [void]$sb.AppendLine('</div>')
-    }
-
-    if ($rows.Count -eq 0) {
-        [void]$sb.AppendLine('<p>' + $T.noEvents + '</p>')
-    } else {
-        $byDate = $rows | Group-Object { ($_.Start.ToString('yyyy-MM-dd') + ' (' + (Get-WeekdayName $_.Start $T) + ')') }
-        $todayKey = $nowLocal.ToString('yyyy-MM-dd')
-        foreach ($g in $byDate) {
-            $dayMark = if ($g.Group[0].Start.ToString('yyyy-MM-dd') -eq $todayKey) { ' <span style="font-size:12px;color:#888;font-weight:normal">&lt;- ' + $T.todayMark + '</span>' } else { '' }
-            [void]$sb.AppendLine('<h3 style="margin:14px 0 4px 0;border-bottom:1px solid #ddd;padding-bottom:2px">' + $g.Name + $dayMark + '</h3>')
-            [void]$sb.AppendLine('<table cellpadding="4" cellspacing="0" style="border-collapse:collapse;width:100%">')
-            foreach ($r in ($g.Group | Sort-Object Start)) {
-                $when = if ($r.AllDayish) { $r.Start.ToString('HH:mm') + $T.deadlineSuffix } else { $r.Start.ToString('HH:mm') + '-' + $r.End.ToString('HH:mm') }
-                $badge = if ($r.Source -eq 'Timetable') { 'background:#e8f0fe;color:#1a4b8c' } else { 'background:#fdece8;color:#8c3a1a' }
-                $sp = Split-CoursePrefix -Summary $r.Summary
-                if ($sp.Code) {
-                    $codeCell = '<span style="font-family:Consolas,monospace;font-size:12px;background:#eef3ee;color:#2d5a2d;padding:1px 6px;border-radius:8px">' + $sp.Code + '</span>'
-                    $titleText = $sp.Title
-                } else {
-                    $codeCell = '<span style="font-size:11px;background:#fdece8;color:#b00;padding:1px 6px;border-radius:8px">' + $T.unmapped + '</span>'
-                    $titleText = $sp.Title
-                }
-                [void]$sb.AppendLine('<tr>')
-                [void]$sb.AppendLine('<td style="white-space:nowrap;vertical-align:top;font-family:Consolas,monospace;color:#555">' + $when + '</td>')
-                [void]$sb.AppendLine('<td style="vertical-align:top;white-space:nowrap">' + $codeCell + '</td>')
-                [void]$sb.AppendLine('<td style="vertical-align:top">' + (ConvertTo-HtmlSafe $titleText) +
-                    $(if ($r.Kind) { ' <span style="font-family:Consolas,monospace;font-size:11px;background:#fff3d6;color:#8a5b00;padding:1px 5px;border-radius:8px">' + $r.Kind + '</span>' }) +
-                    $(if ($r.Location) { '<span style="color:#777"> @ ' + (ConvertTo-HtmlSafe $r.Location) + '</span>' }) +
-                    $(if ($r.Expired) { ' <span style="color:#999;font-size:12px">' + $T.expired + '</span>' }) + '</td>')
-                [void]$sb.AppendLine('<td style="vertical-align:top"><span style="font-size:11px;padding:1px 6px;border-radius:8px;' + $badge + '">' + $r.Source + '</span></td>')
-                [void]$sb.AppendLine('</tr>')
-            }
-            [void]$sb.AppendLine('</table>')
-        }
-    }
-    if (@($deadlinePreview).Count -gt 0) {
-        [void]$sb.AppendLine('<h3 style="margin:18px 0 4px 0;padding-top:8px;border-top:2px solid #eee;color:#8c3a1a">' + (Format-Mail $T.previewHead @{ days = $Days }) + '</h3>')
-        [void]$sb.AppendLine('<table cellpadding="4" cellspacing="0" style="border-collapse:collapse;width:100%">')
-        foreach ($r in ($deadlinePreview | Sort-Object Start)) {
-            $sp = Split-CoursePrefix -Summary $r.Summary
-            $codeCell = if ($sp.Code) { '<span style="font-family:Consolas,monospace;font-size:12px;background:#eef3ee;color:#2d5a2d;padding:1px 6px;border-radius:8px">' + $sp.Code + '</span>' } else { '' }
-            [void]$sb.AppendLine('<tr>')
-            [void]$sb.AppendLine('<td style="white-space:nowrap;vertical-align:top;font-family:Consolas,monospace;color:#555">' + ($r.Start.ToString('MM-dd') + ' (' + (Get-WeekdayName $r.Start $T) + ' ' + $r.Start.ToString('HH:mm') + ')') + '</td>')
-            [void]$sb.AppendLine('<td style="vertical-align:top;white-space:nowrap">' + $codeCell + '</td>')
-            [void]$sb.AppendLine('<td style="vertical-align:top">' + (ConvertTo-HtmlSafe $sp.Title) +
-                $(if ($r.Kind) { ' <span style="font-family:Consolas,monospace;font-size:11px;background:#fff3d6;color:#8a5b00;padding:1px 5px;border-radius:8px">' + $r.Kind + '</span>' }) + '</td>')
-            [void]$sb.AppendLine('<td></td>')
-            [void]$sb.AppendLine('</tr>')
-        }
-        [void]$sb.AppendLine('</table>')
-    }
-    [void]$sb.AppendLine('<p style="color:#888;font-size:12px;margin-top:18px">' + $T.footer + '</p>')
-    [void]$sb.AppendLine('</body></html>')
-    $htmlBody = $sb.ToString()
+    # ---- 新版排版（v14）----
+    # DUE SOON（P0<=48h 红 / P1<=7d 琥珀）、TODAY & TOMORROW、FURTHER OUT（7-14d）
+    . (Join-Path $ProjectRoot 'lib\render-v14.ps1')
+    $classRows    = @($rows | Where-Object { $_.Source -eq 'Timetable' })
+    $deadlineRows = @(@($rows | Where-Object { $_.Source -ne 'Timetable' }) + @($deadlinePreview))
+    $htmlLang     = [string]$config['Language']
+    if ([string]::IsNullOrEmpty($htmlLang) -or $htmlLang -eq 'auto') { $htmlLang = 'en' }
+    $htmlBody = Render-V14Html -Classes $classRows -Deadlines $deadlineRows -Changes @($feedChanges) -Now $nowLocal -Lang $htmlLang
 
     # 落地一份纯文本存档
     $outDir = Join-Path $ProjectRoot 'out'
@@ -347,6 +274,9 @@ $T = $null
     }
     # -UseSsl 是 switch 型参数：仅在需要时加入，避免传位置值报错
     if ([bool]$config['UseSsl']) { $mailParams['UseSsl'] = $true }
+    # 完整截止清单作为附件（很小，~10 KB），方便一键导入日历
+    $attachIcs = Join-Path $ProjectRoot 'out\HKCC_deadlines.ics'
+    if (Test-Path -LiteralPath $attachIcs) { $mailParams['Attachments'] = @($attachIcs) }
 
     # 发信重试：Office365 偶尔直接掐断 SMTP 连接（2026-11-13 就整封漏发过），
     # 隔一会儿再试通常就通了。
